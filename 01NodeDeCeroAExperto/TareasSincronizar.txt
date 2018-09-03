@@ -1,0 +1,3 @@
+Para sincronizar en los diferentes pc ejecutar lo siguientes
+
+instalar paquete nodemon como global
