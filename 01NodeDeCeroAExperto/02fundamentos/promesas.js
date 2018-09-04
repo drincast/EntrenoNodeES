@@ -58,7 +58,7 @@ let getSalario = (empleado) => {
 }
 
 //basico
-getEmpleado(3)
+getEmpleado(1)
 .then( (empleado) => {
     console.log('primera forma');
     console.log(empleado);
@@ -75,7 +75,7 @@ getEmpleado(3)
 });
 
 //llamado encadenado
-getEmpleado(1)
+getEmpleado(2)
 .then( (empleado) => {
     console.log('\n\nsegunda forma');
     console.log(empleado);
