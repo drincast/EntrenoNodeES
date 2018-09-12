@@ -20,7 +20,7 @@ let listarTabla = (multiplicando, limite = 10) => {
 }
 
 let crearArchivo = ( multiplicando, limite = 10) => {
-    return new Promise( (resolve, reject) =>{
+    return new Promise( (resolve, reject) => {
         if (!Number(multiplicando)){
             reject(`El valor del multiplicando (${multiplicando}) no es un número`);
             return;
