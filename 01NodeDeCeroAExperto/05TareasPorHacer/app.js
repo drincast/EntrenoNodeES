@@ -31,9 +31,13 @@ switch (comando) {
 
         break;
     case 'actualizar':
-        console.log('actualizar tareas or hacer');
+        let actualizado = tareas.actualizarTarea(argv.tarea, argv.completo);
+        console.log(actualizado);        
         break;
-
+    case 'borrar':
+        let borrado = tareas.borrar(argv.tarea);
+        console.log(borrado);
+        break;
     default:
         console.log('comando no identificado');
         break;

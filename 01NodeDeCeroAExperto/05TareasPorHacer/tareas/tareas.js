@@ -39,6 +39,21 @@ const obtenerTareas = () => {
     return lstTareas;
 }
 
+const actualizarTarea = (descripcion, realizada = true) => {
+    cargarBD();
+
+    let index = lstTareas.findIndex(tarea => tarea.descripcion === descripcion);
+
+    if(index >= 0){
+        lstTareas[index].completado = realizada;
+        guardarBD();
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 const crear = (descripcion) => {
     let tarea = {
         descripcion: descripcion,
@@ -56,7 +71,24 @@ const crear = (descripcion) => {
     return tarea;
 }
 
+const borrar = (tareaB) => {
+    cargarBD();
+
+    let index = lstTareas.findIndex(tarea => tarea.descripcion === tareaB);
+
+    if(index >= 0){
+        lstTareas.splice(index, 1);
+        guardarBD();
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 module.exports = {
+    actualizarTarea,
+    borrar,
     crear,
     obtenerTareas
 }
