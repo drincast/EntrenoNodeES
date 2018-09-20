@@ -1,0 +1,14 @@
+{
+  "name": "06appclima",
+  "version": "1.0.0",
+  "description": "aplicación node para mostrar información del clima",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "drincast",
+  "license": "MIT",
+  "dependencies": {
+    "yargs": "^12.0.2"
+  }
+}
