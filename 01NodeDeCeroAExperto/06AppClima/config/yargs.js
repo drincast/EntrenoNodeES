@@ -6,8 +6,6 @@ const argv = require('yargs').options({
     }
 }).argv;
 
-console.log(argv.direccion);
-
 module.exports = {
     argv
 }
