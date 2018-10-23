@@ -20,7 +20,7 @@ let salarios = [
     },
     {
         id: 2,
-        salario: 2000        
+        salario: 20000        
     }
 ];
 
