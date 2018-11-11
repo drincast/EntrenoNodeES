@@ -12,5 +12,3 @@ obtenerDatosDireccion(undefined, pais, ciudad)
     console.log(dataPlace);
 })
 .catch(() => console.log(`Error !!! - ${error}`));
-
-
