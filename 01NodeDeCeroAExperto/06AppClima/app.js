@@ -2,33 +2,36 @@ const axios = require('axios');
 //const request = require('request');
 
 const argv = require('./config/yargs').argv;
+const apiKeys = require('./config/keys.json');
+
+//Keys APIs
+let keyBigMap = apiKeys.keyBigMaps;
 
 //let encodedURL = encodeURI(argv.direccion);
-let encodedURL = "cali colombia";
+let pais = encodeURI(argv.pais);
+let ciudad = encodeURI(argv.ciudad);
+let encodeURL = `CountryRegion=${pais}&locality=${ciudad}`;
 
 //console.log(argv.direccion);
 
-axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyA-HXVa2jtkGfKtIJwisxgC46RaWqC1xuI`)
-.then( (resp) => {
-    console.log(JSON.stringify(resp, undefined, 2));
-})
-.catch( err => console.log(`Error !!! - ${err}`));
+// axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyA-HXVa2jtkGfKtIJwisxgC46RaWqC1xuI`)
+// .then( (resp) => {
+//     console.log(JSON.stringify(resp, undefined, 2));
+// })
+// .catch( err => console.log(`Error !!! - ${err}`));
 
 
-
-axios(
-    {
-        method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyASFjCYandCuhHpE-CEFuHxPSdncVz-3Go`,
-        timeout: 1000
-    }
-)
-.then( (resp) => {
-    console.log(JSON.stringify(resp, undefined, 2));
-})
-.catch( err => console.log(`Error !!! - ${err}`));
-
-
+// axios(
+//     {
+//         method: 'get',
+//         url: `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyASFjCYandCuhHpE-CEFuHxPSdncVz-3Go`,
+//         timeout: 1000
+//     }
+// )
+// .then( (resp) => {
+//     console.log(JSON.stringify(resp, undefined, 2));
+// })
+// .catch( err => console.log(`Error !!! - ${err}`));
 
 
 
@@ -46,25 +49,51 @@ axios(
 
 
 
-axios.get(`https://blog-api-u.herokuapp.com/v1/posts/`)
-.then((response) => {
-    console.log(response.data);
-})
-.catch((error) => {
-    console.error(error);
-});
+// axios.get(`https://blog-api-u.herokuapp.com/v1/posts/`)
+// .then((response) => {
+//     console.log(response.data);
+// })
+// .catch((error) => {
+//     console.error(error);
+// });
 
 
+// axios(
+//     {
+//         method: 'get',
+//         url: `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyASFjCYandCuhHpE-CEFuHxPSdncVz-3Go`,
+//         timeout: 3000
+//     }
+// )
+// .then( (resp) => {
+//     console.log(JSON.stringify(resp.results, undefined, 2));
+// })
+// .catch( err => console.log(`Error !!! - ${err}`));
 
 
 axios(
     {
         method: 'get',
-        url: `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedURL}&key=AIzaSyASFjCYandCuhHpE-CEFuHxPSdncVz-3Go`,
-        timeout: 3000
+        url: `https://dev.virtualearth.net/REST/v1/Locations?${encodeURL}&key=${keyBigMap}`,
+        timeout: 2000
     }
 )
 .then( (resp) => {
-    console.log(JSON.stringify(resp.results, undefined, 2));
+    let infoLocality = {};
+
+    infoLocality.statusCode = resp.data.statusCode;
+
+    if(resp.data.resourceSets[0] !== undefined 
+    && resp.data.resourceSets[0] !== null){
+        if(resp.data.resourceSets[0].estimatedTotal > 0 ){
+            infoLocality.address = resp.data.resourceSets[0].resources[0].address.formattedAddress;
+            infoLocality.latitude = resp.data.resourceSets[0].resources[0].point.coordinates[0];
+            infoLocality.longitude = resp.data.resourceSets[0].resources[0].point.coordinates[1];
+        }
+    }
+
+    console.log(infoLocality);
+    
+    //console.log(JSON.stringify(resp, undefined, 2));
 })
 .catch( err => console.log(`Error !!! - ${err}`));
