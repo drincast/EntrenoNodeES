@@ -4,11 +4,14 @@
   "description": "app con express, app cliente con handlebars",
   "main": "index.js",
   "scripts": {
+    "nodemon": "nodemon server",
+    "start": "node server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "hbs": "^4.0.1"
   }
 }
