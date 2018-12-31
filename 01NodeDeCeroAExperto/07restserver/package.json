@@ -1,0 +1,21 @@
+{
+  "name": "08restserver",
+  "version": "1.0.0",
+  "description": "\"api res del curso node desde cero de udemy\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "con",
+    "node"
+  ],
+  "author": "drincast",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4"
+  }
+}
