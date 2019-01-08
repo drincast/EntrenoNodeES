@@ -1,5 +1,7 @@
 const express = require('express');
 const User = require('../models/user');
+const bcrypt = require('bcrypt');
+const _ = require('underscore');
 
 const app = express();
 
@@ -7,14 +9,50 @@ app.get('/', function(req, res){
     res.json('hola express');
 });
 
-app.get('/user', function(req, res){
-    res.json('get usuario');
+app.get('/users', function(req, res){
+    let from = Number(req.query.from) || 0;
+    let limit = Number(req.query.limit) || 5;
+    let count = 0;
+    let query = {
+        state: true
+    }
+
+    User.find(query, 'accountGoogle email img name role state')
+    .skip(from)
+    .limit(limit)
+    .exec(async (err, users) => {
+        if(err){
+            res.status(400).json({
+                ok: false,
+                mensaje: err
+            });
+    
+            return;
+        }
+
+        await User.count(query, (err, counting) => {
+            if(err){
+                res.status(400).json({
+                    ok: false,
+                    mensaje: err
+                });
+        
+                return;
+            }
+            
+            count = counting;
+        })
+
+        res.json({
+            count,
+            ok: true,
+            users
+        });
+    })
 });
 
 app.post('/user', function(req, res){
     let body = req.body;
-
-    console.log(body);
 
     if(body.name === undefined){
         res.status(400).json({
@@ -29,7 +67,7 @@ app.post('/user', function(req, res){
         {
             name: body.name,
             email: body.email,
-            password: body.password,            
+            password: bcrypt.hashSync(body.password, 10),
             role: body.role
         }
     );
@@ -41,6 +79,8 @@ app.post('/user', function(req, res){
                 err
             });
         }
+
+        //userDB.password = null;
 
        res.json({
            ok: true,
@@ -54,14 +94,108 @@ app.post('/user', function(req, res){
 });
 
 app.put('/user/:id', function(req, res){
-    let id = req.params.id
-    res.json({
-        id
+    let id = req.params.id;
+    //solo las propiedades que quiero actualizar
+    let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'state']);
+
+    let options = {
+        new: true,
+        runValidators: true
+    }
+
+    User.findOneAndUpdate({'_id' : id}, body, options, (err, userDB) => {
+        if(err){
+            res.status(400).json({
+                ok: false,
+                mensaje: err
+            });
+    
+            return;
+        }
+
+        res.json({
+            ok: true,
+            user: userDB
+        });
     });
+
 });
 
-app.delete('/user', function(req, res){
-    res.json('delete usuario');
+app.put('/user/:id', function(req, res){
+    let id = req.params.id;
+    //solo las propiedades que quiero actualizar
+    let body = _.pick(req.body, ['state']);
+
+    let options = {
+        new: true,
+        runValidators: true
+    }
+
+    User.findOneAndUpdate({'_id' : id}, body, options, (err, userDB) => {
+        if(err){
+            res.status(400).json({
+                ok: false,
+                message: err
+            });
+    
+            return;
+        }
+
+        res.json({
+            ok: true,
+            user: userDB
+        });
+    });
+
+});
+
+app.delete('/user/:id', function(req, res){
+    let id = req.params.id;
+
+    let statefalse = false;
+
+    let changeState = {
+        state: statefalse
+    }
+
+    let options = {
+        new: true,
+        runValidators: true
+    }
+
+    let query = {
+        '_id' : id,
+        'state': true
+    }
+
+    //eliminacion fisica de la base de datos
+    //User.findOneAndRemove({'_id' : id}, (err, deleteUser) => {
+    
+    //actualizacion de estado para control de eliminación logica
+    User.findOneAndUpdate(query, changeState, options, (err, deleteUser) => {
+        if(err){
+            res.status(400).json({
+                ok: false,
+                message: err
+            });
+    
+            return;
+        }
+
+        if(deleteUser === null){            
+            res.status(400).json({
+                ok: false,
+                message: 'usuario no encontrado'
+            });
+        
+            return;
+        }
+
+        res.json({
+            ok: true,
+            user: deleteUser
+        })
+    });
 });
 
 module.exports = app;
