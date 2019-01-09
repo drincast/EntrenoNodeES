@@ -12,10 +12,15 @@ if(process.env.NODE_ENV === 'dev'){
     urlDB = 'mongodb://localhost:27017/cafe';
 }
 else{
-    urlDB = 'mongodb://userCafe:user123@ds050739.mlab.com:50739/cafenode';
+    urlDB = process.env.MONGOLAB_URI;
 }
 
-//urlDB = 'mongodb://userCafe:user123@ds050739.mlab.com:50739/cafenode';
+//crear variable en heroku
+// ver variables heroku config
+// crear variable config:set [NOMBRE]=[valor]
+// quitar variable config:unset [NOMBRE]=[valor]
+
+//urlDB = 'mongodb://userCafe_321:xx_user123@ds050739.mlab.com:50739/cafenode';
 
 process.env.URLDB = urlDB;
 
