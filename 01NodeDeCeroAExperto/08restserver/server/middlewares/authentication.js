@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 // verificar token
-let verificaToken = (req, res, next) => {
+let verifyToken = (req, res, next) => {
     let token = req.get('token');
 
     console.log(req.user);
@@ -28,5 +28,5 @@ let verificaToken = (req, res, next) => {
 }
 
 module.exports = {
-    verificaToken
+    verifyToken
 }
