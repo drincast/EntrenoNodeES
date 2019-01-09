@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
+const { verificaToken } = require('../middlewares/autenticacion');
 
 const app = express();
 
@@ -9,7 +10,7 @@ app.get('/', function(req, res){
     res.json('hola express');
 });
 
-app.get('/users', function(req, res){
+app.get('/users', verificaToken, function(req, res){
     let from = Number(req.query.from) || 0;
     let limit = Number(req.query.limit) || 5;
     let count = 0;
