@@ -27,6 +27,21 @@ let verifyToken = (req, res, next) => {
     next();
 }
 
+let verifyAdminRole = (req, res, next) => {
+    let role = req.user.role;
+
+    if(role !== 'ADMIN_ROLE'){
+        return res.status(401).json({
+            ok: false,
+            err: 'no tiene privilegios para realizar esta operación'
+        });
+    }
+
+    next();
+    return true;
+}
+
 module.exports = {
-    verifyToken
+    verifyToken,
+    verifyAdminRole
 }

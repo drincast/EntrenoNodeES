@@ -2,7 +2,7 @@ const express = require('express');
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
-const { verifyToken } = require('../middlewares/authentication');
+const { verifyToken, verifyAdminRole } = require('../middlewares/authentication');
 
 const app = express();
 
@@ -52,7 +52,7 @@ app.get('/users', verifyToken, function(req, res){
     })
 });
 
-app.post('/user', function(req, res){
+app.post('/user', [verifyToken, verifyAdminRole], function(req, res){
     let body = req.body;
 
     if(body.name === undefined){
@@ -94,7 +94,7 @@ app.post('/user', function(req, res){
     // });
 });
 
-app.put('/user/:id', function(req, res){
+app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
     let id = req.params.id;
     //solo las propiedades que quiero actualizar
     let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'state']);
@@ -122,7 +122,7 @@ app.put('/user/:id', function(req, res){
 
 });
 
-app.put('/user/:id', function(req, res){
+app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
     let id = req.params.id;
     //solo las propiedades que quiero actualizar
     let body = _.pick(req.body, ['state']);
@@ -150,7 +150,7 @@ app.put('/user/:id', function(req, res){
 
 });
 
-app.delete('/user/:id', function(req, res){
+app.delete('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
     let id = req.params.id;
 
     let statefalse = false;
