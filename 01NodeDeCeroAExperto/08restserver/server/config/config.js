@@ -21,6 +21,9 @@ else{
     urlDB = process.env.MONGOLAB_URI;
 }
 
+//google client id
+process.env.CLIENT_ID = process.env.CLIENT_ID || '572458336537-60ibil7qjtpsvpgo0e1jtvphq2kffsgf.apps.googleusercontent.com';
+
 //crear variable en heroku
 // ver variables heroku config
 // crear variable config:set [NOMBRE]=[valor]
