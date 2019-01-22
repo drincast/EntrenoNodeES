@@ -45,7 +45,7 @@ app.get('/category/:id', verifyToken, function(req, res){
     }
 });
 
-app.post('/category', verifyToken, (req, res) => {
+app.post('/category', verifyToken, async (req, res) => {
     let body = req.body;
     let category = null;
 
@@ -69,76 +69,144 @@ app.post('/category', verifyToken, (req, res) => {
                 }
             }
         }
-    
+
         category = new Category(
             {
                 description: body.description,
                 user: req.user._id
             }
         );
+        
+        let respMongoose = undefined;
 
-        category.save((err, categoryDB) => {            
-            if(err){
-                throw {
-                    statusCode: 500,
-                    error: {
-                        ok: false,
-                        msj: err
-                    }
-                }
-            }
+        await category.save().then((categoryDB) => {
+            console.log('category', category)
 
-            if(!categoryDB){
-                throw {
-                    statusCode: 500,
-                    error: {
-                        ok: false,
-                        msj: err
-                    }
-                }
-            }
-
-            res.json({
+            respMongoose = {
                 ok: true,
                 category: categoryDB
-            })
+            }
+        })
+        .catch(function(err) {
+            let statusCode = err.code === 11000 ? 400 : 500;
+
+            respMongoose = {
+                ok: false,
+                err,
+                statusCode
+            }
         });
+
+        console.log('a procesar respuesta', respMongoose !== undefined)
+        if(respMongoose !== undefined){
+            if(respMongoose.ok){
+                console.log('respMoongose', respMongoose, '---fin');
+                res.json(respMongoose);
+            }
+            else{
+                //TODO: asignar statusCode segun el codigo de error de moongose
+                throw respMongoose;
+            }
+        }
+        else{
+            throw {
+                statusCode: 500,
+                error: {
+                    ok: false,
+                    msj: 'error en el servidor'
+                }
+            }
+        }
         
     } catch (error) {
-        res.status(error.codeStatus).json({
+        //TODO: crear el manejo de registro de la excepción y retorno de mensaje especial al cliente
+        //segun el tipo de error
+
+        console.log('errorX', error, '---fin')
+        res.status(error.statusCode).json({
             ok: false,
             message: error
-        });    
+        });
     }
 });
 
-// app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
-//     let id = req.params.id;
-//     //solo las propiedades que quiero actualizar
-//     let body = _.pick(req.body, ['name', 'email', 'img', 'role', 'state']);
+app.put('/category/:id', verifyToken, async function(req, res){
+    let id = req.params.id;
+    let body = req.body;
 
-//     let options = {
-//         new: true,
-//         runValidators: true
-//     }
+    let newDescription = {
+        description: body.description
+    }
 
-//     User.findOneAndUpdate({'_id' : id}, body, options, (err, userDB) => {
-//         if(err){
-//             res.status(400).json({
-//                 ok: false,
-//                 mensaje: err
-//             });
-    
-//             return;
-//         }
+    let options = {
+        new: true,
+        runValidators: true
+    }
 
-//         res.json({
-//             ok: true,
-//             user: userDB
-//         });
-//     });
+    let respMongoose = undefined;
 
-// });
+    try {
+        console.log('respMongoose inicial', respMongoose);
+
+        await Category.findByIdAndUpdate({'_id' : id}, newDescription, options, (err, categoryDB) => {
+            if(err){
+                respMongoose = {
+                    statusCode: 500,
+                    error: {
+                        ok: false,
+                        msj: err
+                    }
+                }
+            }
+            else{
+                if(!categoryDB){                
+                    respMongoose = {
+                        statusCode: 400,
+                        error: {
+                            ok: false,
+                            msj: 'No existe la categoria'
+                        }
+                    }
+                }
+                else{
+                    respMongoose = {
+                        ok: true,
+                        category: categoryDB
+                    };
+                }
+            }
+        }); 
+        
+        console.log('respMongoose procesando', respMongoose);
+        if (respMongoose !== undefined) {
+            if (respMongoose.ok) {
+                console.log('Se actualizo respMoongose', respMongoose, '---fin');
+                res.json(respMongoose);
+            }
+            else {
+                //TODO: asignar statusCode segun el codigo de error de moongose
+                throw respMongoose;
+            }
+        } else {
+            throw {
+                statusCode: 500,
+                error: {
+                    ok: false,
+                    msj: 'error en el servidor'
+                }
+            }
+        }
+    } catch (error) {
+        //TODO: crear el manejo de registro de la excepción y retorno de mensaje especial al cliente
+        //segun el tipo de error
+
+        console.log('errorX', error, '---fin')
+        res.status(error.statusCode).json({
+            ok: false,
+            message: error
+        });
+    }
+});
 
 // app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
 //     let id = req.params.id;

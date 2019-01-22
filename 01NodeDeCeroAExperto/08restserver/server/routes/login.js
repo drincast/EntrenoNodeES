@@ -93,7 +93,7 @@ async function verify(token) {
 
 app.post('/google', async (req, res) => {
     let token = req.body.idtoken;
-    console.log('tokengoogle: ', token);
+    //console.log('tokengoogle: ', token);
 
     let userGoogle = await verify(token)
                             .catch( error => {                                
@@ -122,9 +122,7 @@ app.post('/google', async (req, res) => {
         }
 
         if(userDB){
-            console.log('encontro el usuario')
             if(userDB.accountGoogle === false){
-                console.log('no tiene asociado el usuario google')
                 res.status(400).json({
                     ok: false,
                     message: 'Debe usar la autenticación normal'
