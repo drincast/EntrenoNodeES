@@ -39,10 +39,14 @@
 
         function signOut() {
             var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
+            console.log(auth2);
+            auth2.signOut().then(function (err) {
+                console.log(err);
                 console.log('User signed out.');
-            });
+            }, console.log('termino'));
         }
+
+        //https://developers.google.com/identity/sign-in/web/sign-in
     </script>
 </body>
 </html>
