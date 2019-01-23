@@ -25,7 +25,7 @@ app.get('/users', verifyToken, function(req, res){
         if(err){
             res.status(400).json({
                 ok: false,
-                mensaje: err
+                message: err
             });
     
             return;
@@ -35,7 +35,7 @@ app.get('/users', verifyToken, function(req, res){
             if(err){
                 res.status(400).json({
                     ok: false,
-                    mensaje: err
+                    message: err
                 });
         
                 return;
@@ -58,7 +58,7 @@ app.post('/user', [verifyToken, verifyAdminRole], function(req, res){
     if(body.name === undefined){
         res.status(400).json({
             ok: false,
-            mensaje: 'nombre es necesario'
+            message: 'nombre es necesario'
         });
 
         return;
@@ -108,7 +108,7 @@ app.put('/user/:id', [verifyToken, verifyAdminRole], function(req, res){
         if(err){
             res.status(400).json({
                 ok: false,
-                mensaje: err
+                message: err
             });
     
             return;
