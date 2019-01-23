@@ -1,4 +1,5 @@
 const express = require('express');
+const { ManageErrorsMongoose } = require('../utils/ManageError');
 const Category = require('../models/category');
 //const bcrypt = require('bcrypt');
 //const _ = require('underscore');
@@ -52,21 +53,19 @@ app.post('/category', verifyToken, async (req, res) => {
     try {
         if(body.description === undefined){
             throw {
-                statusCode: 400,
                 error: {
-                    ok: false,
-                    msj: 'la descripción es necesaria'
-                }
+                    message: 'la descripción es necesaria'
+                },
+                statusCode: 400
             }   
         }
 
         if(req.user._id === undefined){
-            throw {
-                statusCode: 400,
+            throw {                
                 error: {
-                    ok: false,
-                    msj: 'no hay un usuario logeado, realice el proceso de logeo'
-                }
+                    message: 'no hay un usuario logeado, realice el proceso de logeo'
+                },
+                statusCode: 400
             }
         }
 
@@ -80,27 +79,36 @@ app.post('/category', verifyToken, async (req, res) => {
         let respMongoose = undefined;
 
         await category.save().then((categoryDB) => {
-            console.log('category', category)
-
             respMongoose = {
                 ok: true,
                 category: categoryDB
             }
         })
-        .catch(function(err) {
-            let statusCode = err.code === 11000 ? 400 : 500;
+        .catch(function(error) {
+            let statusCode = error.code === 11000 ? 400 : 500;
+
+            let err = ManageErrorsMongoose(error);
+            //console.log('ManageErrorsMongoose', e01)
+
+            // respMongoose = {
+            //     error: {
+            //         msj: error
+            //     },
+            //     statusCode
+            // }
 
             respMongoose = {
-                ok: false,
-                err,
-                statusCode
+                error: {
+                    message: err.message,
+                    all: err
+                },
+                statusCode: err.statusCode
             }
         });
 
         console.log('a procesar respuesta', respMongoose !== undefined)
         if(respMongoose !== undefined){
             if(respMongoose.ok){
-                console.log('respMoongose', respMongoose, '---fin');
                 res.json(respMongoose);
             }
             else{
@@ -110,23 +118,21 @@ app.post('/category', verifyToken, async (req, res) => {
         }
         else{
             throw {
-                statusCode: 500,
                 error: {
-                    ok: false,
-                    msj: 'error en el servidor'
-                }
+                    message: 'error en el servidor'
+                },
+                statusCode: 500
             }
-        }
-        
+        }        
     } catch (error) {
         //TODO: crear el manejo de registro de la excepción y retorno de mensaje especial al cliente
         //segun el tipo de error
 
-        console.log('errorX', error, '---fin')
+        console.log('errorX', error, '---fin');
         res.status(error.statusCode).json({
             ok: false,
-            message: error
-        });
+            message: error.error.message
+        });        
     }
 });
 
@@ -148,39 +154,39 @@ app.put('/category/:id', verifyToken, async function(req, res){
     try {
         console.log('respMongoose inicial', respMongoose);
 
-        await Category.findByIdAndUpdate({'_id' : id}, newDescription, options, (err, categoryDB) => {
-            if(err){
+        await Category.findByIdAndUpdate({'_id' : id}, newDescription, options)
+        .then(categoryDB => {
+            if(!categoryDB){                
                 respMongoose = {
-                    statusCode: 500,
                     error: {
-                        ok: false,
-                        msj: err
-                    }
+                        message: 'No existe la categoria'
+                    },
+                    statusCode: 400
                 }
             }
             else{
-                if(!categoryDB){                
-                    respMongoose = {
-                        statusCode: 400,
-                        error: {
-                            ok: false,
-                            msj: 'No existe la categoria'
-                        }
-                    }
-                }
-                else{
-                    respMongoose = {
-                        ok: true,
-                        category: categoryDB
-                    };
-                }
+                respMongoose = {
+                    ok: true,
+                    category: categoryDB
+                };
+            }
+        })
+        .catch( error => {
+            //TODO: asignar statusCode segun el codigo de error de moongose
+            let err = ManageErrorsMongoose(error);
+            console.log('ManageErrorsMongoose', err)
+            respMongoose = {
+                error: {
+                    message: err.message,
+                    all: err
+                },
+                statusCode: err.statusCode
             }
         }); 
         
         console.log('respMongoose procesando', respMongoose);
         if (respMongoose !== undefined) {
             if (respMongoose.ok) {
-                console.log('Se actualizo respMoongose', respMongoose, '---fin');
                 res.json(respMongoose);
             }
             else {
@@ -189,21 +195,21 @@ app.put('/category/:id', verifyToken, async function(req, res){
             }
         } else {
             throw {
-                statusCode: 500,
                 error: {
-                    ok: false,
-                    msj: 'error en el servidor'
-                }
+                    message: 'Error en el servidor, error no especificado'
+                },
+                statusCode: 500
             }
         }
     } catch (error) {
         //TODO: crear el manejo de registro de la excepción y retorno de mensaje especial al cliente
         //segun el tipo de error
 
-        console.log('errorX', error, '---fin')
-        res.status(error.statusCode).json({
+        console.log('errorX', error.statusCode, error, '---fin')
+
+        res.status(parseInt(error.statusCode)).json({
             ok: false,
-            message: error
+            message: error.error.message
         });
     }
 });
