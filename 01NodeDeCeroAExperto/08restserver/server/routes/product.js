@@ -1,21 +1,21 @@
 const express = require('express');
 const { ManageErrorsMongoose } = require('../utils/ManageError');
-const Category = require('../models/category');
-//const bcrypt = require('bcrypt');
-//const _ = require('underscore');
+const Product = require('../models/product');
+
 const { verifyToken, verifyAdminRole } = require('../middlewares/authentication');
 
 const app = express();
 
-app.get('/category', verifyToken, async function(req, res){
+app.get('/product', verifyToken, async function(req, res){
     try {
-        await Category.find()
+        await Product.find()
+        .populate('category', 'description')
         .populate('user', 'name email')
-        .sort('description')
-        .then(lstCategories => {
+        .sort('name')
+        .then(lstProducts => {
             respMongoose = {
                 ok: true,
-                categories: lstCategories
+                products: lstProducts
             }
         })
         .catch(error => {
@@ -60,18 +60,18 @@ app.get('/category', verifyToken, async function(req, res){
     }
 });
 
-app.get('/category/:id', verifyToken, async function(req, res){
+app.get('/product/:id', verifyToken, async function(req, res){
     let query = {
         '_id': req.params.id
     }
     
     try {
-        await Category.findOne(query)
-        .then(lstCategory => {
-            if(lstCategory === null || lstCategory === undefined){
+        await Product.findOne(query)
+        .then(lstProducts => {
+            if(lstProducts === null || lstProducts === undefined){
                 respMongoose = {
                     error: {
-                        message: 'No existe la categoria'
+                        message: 'No existe el producto'
                     },
                     statusCode: 400
                 }
@@ -79,7 +79,7 @@ app.get('/category/:id', verifyToken, async function(req, res){
             else{
                 respMongoose = {
                     ok: true,
-                    categories: lstCategory
+                    products: lstProducts
                 }
             }
         })
@@ -125,28 +125,28 @@ app.get('/category/:id', verifyToken, async function(req, res){
     }
 });
 
-app.get('/category/description/:description', verifyToken, async function(req, res){
+app.get('/product/name/:name', verifyToken, async function(req, res){
     let query = undefined;
     
     try {
-        if(req.params.description === undefined){
+        if(req.params.category === undefined){
             throw {
                 error: {
-                    message: 'la descripción es necesaria'
+                    message: 'el nombre es necesaria'
                 },
                 statusCode: 400
             }
         }
 
         query = {
-            description: RegExp(req.params.description, 'i')
+            description: RegExp(req.params.name, 'i')
         }
 
         await Category.find(query)
-        .then(lstCategories => {
+        .then(lstProducts => {
             res.json({
                 ok: true,
-                lstCategories
+                lstProducts
             }); 
         })
         .catch(error => {
@@ -172,15 +172,33 @@ app.get('/category/description/:description', verifyToken, async function(req, r
     }
 });
 
-app.post('/category', verifyToken, async (req, res) => {
+app.post('/product', verifyToken, async (req, res) => {
     let body = req.body;
     let category = null;
 
     try {
-        if(body.description === undefined){
+        if(body.name === undefined){
             throw {
                 error: {
-                    message: 'la descripción es necesaria'
+                    message: 'el nombre es necesaria'
+                },
+                statusCode: 400
+            }   
+        }
+
+        if(body.uniquePrice === undefined){
+            throw {
+                error: {
+                    message: 'el precio es necesaria'
+                },
+                statusCode: 400
+            }   
+        }
+
+        if(body.uniquePrice === undefined){
+            throw {
+                error: {
+                    message: 'el campo habilitado es necesaria'
                 },
                 statusCode: 400
             }   
@@ -195,24 +213,27 @@ app.post('/category', verifyToken, async (req, res) => {
             }
         }
 
-        category = new Category(
+        product = new Product(
             {
+                name: body.name,
+                uniquePrice: body.uniquePrice,
                 description: body.description,
+                available: body.available,
+                category: body.category._id,
                 user: req.user._id
             }
         );
         
         let respMongoose = undefined;
 
-        await category.save().then((categoryDB) => {
+        await product.save()
+        .then((productDB) => {
             respMongoose = {
                 ok: true,
-                category: categoryDB
+                product: productDB
             }
         })
         .catch(function(error) {
-            let statusCode = error.code === 11000 ? 400 : 500;
-
             let err = ManageErrorsMongoose(error);
 
             respMongoose = {
@@ -254,12 +275,15 @@ app.post('/category', verifyToken, async (req, res) => {
     }
 });
 
-app.put('/category/:id', verifyToken, async function(req, res){
+app.put('/product/:id', verifyToken, async function(req, res){
     let id = req.params.id;
     let body = req.body;
 
-    let newDescription = {
-        description: body.description
+    let updateProduc = {
+        name: body.name,
+        uniquePrice: body.uniquePrice,
+        description: body.description,
+        available: body.available
     }
 
     let query = {
@@ -276,9 +300,9 @@ app.put('/category/:id', verifyToken, async function(req, res){
     try {
         console.log('respMongoose inicial', respMongoose);
 
-        await Category.findByIdAndUpdate(query, newDescription, options)
-        .then(categoryDB => {
-            if(!categoryDB){                
+        await Product.findByIdAndUpdate(query, updateProduc, options)
+        .then(productDB => {
+            if(!productDB){                
                 respMongoose = {
                     error: {
                         message: 'No existe la categoria'
@@ -289,7 +313,7 @@ app.put('/category/:id', verifyToken, async function(req, res){
             else{
                 respMongoose = {
                     ok: true,
-                    category: categoryDB
+                    product: productDB
                 };
             }
         })
@@ -336,37 +360,32 @@ app.put('/category/:id', verifyToken, async function(req, res){
     }
 });
 
-app.delete('/category/:id', [verifyToken, verifyAdminRole], async (req, res) => {
+app.delete('/product/:id', [verifyToken, verifyAdminRole], async (req, res) => {
     let id = req.params.id;
-    let statefalse = false;
 
-    let changeState = {
-        state: statefalse
-    }
-
-    let options = {
-        new: true,
-        runValidators: true
-    }
+    // let options = {
+    //     new: true,
+    //     runValidators: true
+    // }
 
     let query = {
         '_id' : id
     }
     
     //actualizacion de estado para control de eliminación logica
-    await Category.findOneAndRemove(query)
-    .then(deleteCategory => {
-        if(deleteCategory === null || deleteCategory === undefined){            
+    await Product.findOneAndRemove(query)
+    .then(deleteProduct => {
+        if(deleteProduct === null || deleteProduct === undefined){            
             respMongoose = {
                 error: {
-                    message: 'categoria no encontrada'
+                    message: 'producto no encontrado'
                 },
                 statusCode: 400
             }
         } else{
             respMongoose = {
                 ok: true,
-                category: deleteCategory
+                product: deleteProduct
             };
         }
 

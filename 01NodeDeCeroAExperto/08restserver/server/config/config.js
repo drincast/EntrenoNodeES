@@ -5,7 +5,7 @@ process.env.PORT = process.env.PORT || 3002;
 process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
 
 //fecha expiracion token
-process.env.EXPIRATION_TOKEN = 60 * 60 * 24 * 4;
+process.env.EXPIRATION_TOKEN = '48h';
 
 //seed de autenticación
 process.env.SEED = process.env.SEED || 'este-es-el-seed-desarrollo';
