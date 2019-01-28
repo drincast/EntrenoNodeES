@@ -148,7 +148,7 @@ app.get('/product/:id', verifyToken, async function(req, res){
 });
 
 app.get('/product/name/:name', verifyToken, async function(req, res){
-    let query = undefined;
+    let name = undefined;
     
     try {
         if(req.params.name === undefined){
@@ -164,7 +164,7 @@ app.get('/product/name/:name', verifyToken, async function(req, res){
             name: RegExp(req.params.name, 'i')
         }
 
-        await Category.find(query)
+        await Product.find(query)
         .populate('category', 'description')
         .then(lstProducts => {
             res.json({

@@ -10,5 +10,7 @@ app.use( require('./user') );
 app.use( require('./category') );
 //importamos ruta de category
 app.use( require('./product') );
+//uploads
+app.use(require('./upload'));
 
 module.exports = app;
