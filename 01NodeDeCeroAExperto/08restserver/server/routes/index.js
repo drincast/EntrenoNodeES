@@ -8,5 +8,7 @@ app.use( require('./login') );
 app.use( require('./user') );
 //importamos ruta de category
 app.use( require('./category') );
+//importamos ruta de category
+app.use( require('./product') );
 
 module.exports = app;

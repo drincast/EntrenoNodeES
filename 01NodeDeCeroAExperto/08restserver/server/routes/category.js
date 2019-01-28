@@ -11,7 +11,7 @@ app.get('/category', verifyToken, async function(req, res){
     try {
         await Category.find()
         .populate('user', 'name email')
-        .sort('description')
+        .sort({description: 'asc'})
         .then(lstCategories => {
             respMongoose = {
                 ok: true,
@@ -53,10 +53,20 @@ app.get('/category', verifyToken, async function(req, res){
         //segun el tipo de error
 
         console.log('errorX', error, '---fin');
-        res.status(error.statusCode).json({
-            ok: false,
-            message: error.error.message
-        });
+
+        if(error.statusCode){
+            res.status(error.statusCode).json({
+                ok: false,
+                message: error.error.message
+            });
+        }
+        else{
+            res.status(500).json({
+                ok: false,
+                message: `Error en el servidor ${error}`
+            });
+        }
+
     }
 });
 

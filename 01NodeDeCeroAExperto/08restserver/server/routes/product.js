@@ -7,11 +7,20 @@ const { verifyToken, verifyAdminRole } = require('../middlewares/authentication'
 const app = express();
 
 app.get('/product', verifyToken, async function(req, res){
+    let from = Number(req.query.from) || 0;
+    let limit = Number(req.query.limit) || 5;
+    let count = 0;
+    let query = {
+        available: true
+    }
+
     try {
-        await Product.find()
-        .populate('category', 'description')
+        await Product.find(query)
+        .skip(from)
+        .limit(limit)
         .populate('user', 'name email')
-        .sort('name')
+        .populate('category', 'description')
+        .sort({name: 'asc'})
         .then(lstProducts => {
             respMongoose = {
                 ok: true,
@@ -61,12 +70,25 @@ app.get('/product', verifyToken, async function(req, res){
 });
 
 app.get('/product/:id', verifyToken, async function(req, res){
-    let query = {
-        '_id': req.params.id
-    }
+    let query = undefined;
     
     try {
+        if(req.params.id === undefined || req.params.id === null){
+            respMongoose = {
+                error: {
+                    message: 'el identificador de producto es necesario '
+                },
+                statusCode: 400
+            }
+        }
+
+        query = {
+            '_id': req.params.id
+        }
+
         await Product.findOne(query)
+        .populate('user', 'name email')
+        .populate('category', 'description')
         .then(lstProducts => {
             if(lstProducts === null || lstProducts === undefined){
                 respMongoose = {
@@ -129,7 +151,7 @@ app.get('/product/name/:name', verifyToken, async function(req, res){
     let query = undefined;
     
     try {
-        if(req.params.category === undefined){
+        if(req.params.name === undefined){
             throw {
                 error: {
                     message: 'el nombre es necesaria'
@@ -139,10 +161,11 @@ app.get('/product/name/:name', verifyToken, async function(req, res){
         }
 
         query = {
-            description: RegExp(req.params.name, 'i')
+            name: RegExp(req.params.name, 'i')
         }
 
         await Category.find(query)
+        .populate('category', 'description')
         .then(lstProducts => {
             res.json({
                 ok: true,
@@ -174,9 +197,10 @@ app.get('/product/name/:name', verifyToken, async function(req, res){
 
 app.post('/product', verifyToken, async (req, res) => {
     let body = req.body;
-    let category = null;
+    let product = null;
 
     try {
+        //TODO: seperar la validacion de campos obligatorios en una función
         if(body.name === undefined){
             throw {
                 error: {
@@ -195,10 +219,10 @@ app.post('/product', verifyToken, async (req, res) => {
             }   
         }
 
-        if(body.uniquePrice === undefined){
+        if(body.category === undefined){
             throw {
                 error: {
-                    message: 'el campo habilitado es necesaria'
+                    message: 'el id de categoria es necesario'
                 },
                 statusCode: 400
             }   
@@ -213,13 +237,15 @@ app.post('/product', verifyToken, async (req, res) => {
             }
         }
 
+
+
         product = new Product(
             {
                 name: body.name,
                 uniquePrice: body.uniquePrice,
                 description: body.description,
                 available: body.available,
-                category: body.category._id,
+                category: body.category,
                 user: req.user._id
             }
         );
@@ -248,7 +274,7 @@ app.post('/product', verifyToken, async (req, res) => {
         console.log('a procesar respuesta', respMongoose !== undefined)
         if(respMongoose !== undefined){
             if(respMongoose.ok){
-                res.json(respMongoose);
+                res.status(201).json(respMongoose);
             }
             else{
                 //TODO: asignar statusCode segun el codigo de error de moongose
@@ -283,7 +309,8 @@ app.put('/product/:id', verifyToken, async function(req, res){
         name: body.name,
         uniquePrice: body.uniquePrice,
         description: body.description,
-        available: body.available
+        available: body.available,
+        category: body.category
     }
 
     let query = {
@@ -360,20 +387,24 @@ app.put('/product/:id', verifyToken, async function(req, res){
     }
 });
 
-app.delete('/product/:id', [verifyToken, verifyAdminRole], async (req, res) => {
+app.delete('/product/:id', verifyToken, async (req, res) => {
     let id = req.params.id;
 
-    // let options = {
-    //     new: true,
-    //     runValidators: true
-    // }
+    let options = {
+        new: true,
+        runValidators: true
+    }
 
     let query = {
         '_id' : id
     }
+
+    let updateData= {
+        available: false
+    }
     
     //actualizacion de estado para control de eliminación logica
-    await Product.findOneAndRemove(query)
+    await Product.findOneAndUpdate(query, updateData, options)
     .then(deleteProduct => {
         if(deleteProduct === null || deleteProduct === undefined){            
             respMongoose = {
@@ -384,7 +415,8 @@ app.delete('/product/:id', [verifyToken, verifyAdminRole], async (req, res) => {
             }
         } else{
             respMongoose = {
-                ok: true,
+                message: 'El producto se ha borrado',
+                ok: true,                
                 product: deleteProduct
             };
         }
