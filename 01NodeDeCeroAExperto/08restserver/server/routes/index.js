@@ -12,5 +12,7 @@ app.use( require('./category') );
 app.use( require('./product') );
 //uploads
 app.use(require('./upload'));
+//image
+app.use(require('./image'));
 
 module.exports = app;

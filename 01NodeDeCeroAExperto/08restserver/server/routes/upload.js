@@ -1,9 +1,11 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 
 const User = require('../models/user');
+const Product = require('../models/product');
 
 
 // default options
@@ -37,8 +39,6 @@ app.put('/upload/:type/:id', function(req, res) {
     let id = req.params.id;
     let folder = type === 'product' ? 'products' : 'users';
 
-    console.log(req.files)
-
     if(req.files === undefined || req.files === null){
         res.status(400).json({
             ok: false,
@@ -64,8 +64,6 @@ app.put('/upload/:type/:id', function(req, res) {
         });
         return;
     }
-
-    console.log('req.files >>>', req.files); // eslint-disable-line
 
     file = req.files.file;
 
@@ -101,19 +99,42 @@ app.put('/upload/:type/:id', function(req, res) {
         //     message: 'File uploaded to ' + uploadPath
         // });
 
-        imageUser(id, res, newName);        
+        switch (folder) {
+            case 'users':
+                imageUser(id, res, newName);
+                break;
+            case 'products':
+                imageProduct(id, res, newName, folder);
+                break;        
+            default:
+                res.status(500).json({
+                    ok: false,
+                    message: 'No se ejecuto la carga del archivo'
+                });
+                break;
+        }
     });
 });
+
+function DeleteFile(type, fileName){
+    let pathUrlImg = path.resolve(__dirname, `../../uploads/${type}/${fileName}`);
+    if (fs.existsSync(pathUrlImg)) {
+        fs.unlinkSync(pathUrlImg);
+    }
+}
 
 function imageUser(id, res, fileName){
     User.findById(id)
     .then(userDB => {
         if(userDB === undefined || userDB === null){
+            DeleteFile('users', fileName);
             return res.status(400).json({
                 ok: false,
                 message: 'El usuario no existe'
             });
         }
+
+        DeleteFile('users', userDB.img);
 
         userDB.img = fileName;
 
@@ -122,6 +143,45 @@ function imageUser(id, res, fileName){
             res.json({
                 ok: true,
                 message: usrDB
+            });
+        })
+        .catch(err => {
+            res.status(500).json({
+                ok: false,
+                message: err
+            })
+        })
+    })
+    .catch( err => {
+        return res.status(500).json({
+            ok: false,
+            message: err
+        })
+    })
+}
+
+function imageProduct(id, res, fileName, folder){
+    Product.findById(id)
+    .then(productDB => {
+        if(productDB === undefined || productDB === null){
+            DeleteFile(folder, fileName);
+            return res.status(400).json({
+                ok: false,
+                message: 'El producto no existe'
+            });
+        }
+
+        if(productDB.img !== undefined || productDB.img !== null){
+            DeleteFile(folder, productDB.img);
+        }
+
+        productDB.img = fileName;
+
+        productDB.save()
+        .then(pdtDB => {
+            res.json({
+                ok: true,
+                message: pdtDB
             });
         })
         .catch(err => {
