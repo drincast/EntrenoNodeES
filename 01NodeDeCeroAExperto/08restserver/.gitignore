@@ -1,5 +1,8 @@
 # Dependency directories
 node_modules/
 jspm_packages/git 
+!uploads/
 uploads/Products/*.*
 uploads/users/*.*
+!uploads/Products/text.txt
+!uploads/users/text.txt
