@@ -46,11 +46,38 @@ io.on('connection', (client) => {
         lastTicket: ticketControl.GetLastTicket()
     });
 
+    client.emit('SendLast4', {
+        last4: ticketControl.GetLast4()
+    });
+
     client.on('NextTicket', (data, fn) => {
         let next = ticketControl.next();
 
         console.log('ticket: ', next, 'del cliente: ', data);
         fn(next);
+    });
+
+    client.on("RespondTicket", (data, callback) => {
+        if( data.desk !== undefined && data.desk !== undefined){
+            let respondTicket = ticketControl.RespondTicket(data.desk);
+
+            console.log(`atendiendo ticket ${respondTicket.number} en escritorio ${data.desk}`);
+
+            callback(respondTicket);
+
+            console.log('ejecutar SendLast4')
+            
+            client.broadcast.emit('SendLast4', {
+                last4: ticketControl.GetLast4()
+            });     
+        }
+        else{
+            console.log(data);
+            return callback({
+                err: true,
+                message: "El escritorio es necesario"
+            });
+        }        
     })
 
 }); 

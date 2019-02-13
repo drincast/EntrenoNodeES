@@ -11,14 +11,16 @@
 </head>
 
 <body class="container">
-    <h1>Escritorio</h1>
-    <h4>Atendiendo a <small>....</small></h4>
+    <h1>Escritorio <span id="numberDesk"></span></h1>
+    <h4>Atendiendo a <small id="smallShowTicketRespond">....</small></h4>
 
-    <button class="btn btn-primary">
+    <button id="btnRespondNext" class="btn btn-primary">
         Atender siguiente ticket
     </button>
 
-
+    <script type="text/javascript" src="js/libs/jquery.min.js"></script>
+    <script type="text/javascript" src="socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="js/socket_desk.js"></script>
 </body>
 
 </html>

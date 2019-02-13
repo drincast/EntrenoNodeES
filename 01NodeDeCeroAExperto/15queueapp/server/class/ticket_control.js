@@ -44,9 +44,14 @@ class TicketControl{
         return `Ticket ${this.last}`;
     }
 
+    GetLast4(){
+        console.log('last4 ---', this.last4)
+        return this.last4;
+    }
+
     RespondTicket(desk){
         if(this.tickets.length > 0){
-            let numberTicket = this.tickets[0].numero;
+            let numberTicket = this.tickets[0].number;
             this.tickets.shift();
 
             let respondTicket = new Ticket(numberTicket, desk);
@@ -56,8 +61,6 @@ class TicketControl{
             if(this.last4.length > 4){
                 this.last4.splice(-1, 1);
             }
-
-            console.log('ultimos 4', this.last4);
 
             this.SaveFile();
 
