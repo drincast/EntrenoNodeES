@@ -18,7 +18,10 @@ io.on('connection', (client) => {
         let people = user.AddPerson(client.id, data.name, data.room);
 
         //a todos menos al mismo
-        client.broadcast.to(data.room).emit('createMessageServer', {user: 'Admin', message: `${data.name} entro al chat`});
+        // client.broadcast.to(data.room).emit('createMessageServer', {user: 'Admin', message: `${data.name} entro al chat`});
+
+        client.broadcast.to(data.room).emit('createMessageServer', createMessage('Admin', `${data.name} entro al chat`));
+
         client.broadcast.to(data.room).emit('listPeople', user.GetPeopleByRoom(data.room));
 
         //callback(people);
@@ -37,10 +40,12 @@ io.on('connection', (client) => {
         client.broadcast.to(removePerson.room).emit('listPeople', user.GetPeopleByRoom(removePerson.room));
     });
 
-    client.on('sendMessageToServer', (data) => {
+    client.on('sendMessageToServer', (data, callback) => {
         let person = user.GetPerson(client.id);
         let message = createMessage( person.name, data.message);
+        console.log(person.name, data.message);
         client.broadcast.to(person.room).emit('createMessageServer', message);
+        callback(message);
     });
 
     client.on('privateMessage', data => {

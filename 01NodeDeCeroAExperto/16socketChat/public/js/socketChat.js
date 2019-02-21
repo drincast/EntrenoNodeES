@@ -35,7 +35,7 @@ socket.on('connect', function() {
 
     socket.emit('enterTheChat', user, function(resp){
         console.log('usuarios conectados', resp);
-        renderUsers(resp);
+        RenderUsers(resp);
     });
 });
 
@@ -47,12 +47,14 @@ socket.on('disconnect', function() {
 // Escuchar información
 socket.on('createMessageServer', function(message) {
     console.log(message);
+    RenderMessages(message, false);
+    scrollBottom();
 });
 
 // Escuchar información
 socket.on('listPeople', function(data) {
     console.log('personas conectadas', data);
-    renderUsers(data);
+    RenderUsers(data);
 });
 
 //mensaje privado
@@ -63,14 +65,6 @@ socket.on('privateMessage', function(data) {
 
 //Acciones de emisión socket.io
 // Enviar información
-function SendMessageToServer(){
-    socket.emit('sendMessageToServer', {
-        message: 'test message'
-    }, function(resp) {
-        console.log('respuesta server: ', resp);
-    });
-}
-
 
 function SendPrivateMessage(idPerson, messsage){
     if(idPerson !== undefined && idPerson !== null)
@@ -87,3 +81,25 @@ function SendPrivateMessage(idPerson, messsage){
                 }
     );
 }
+
+
+//Acciones de controles de la pagina
+frmSend.on('submit', function(event){            
+    event.preventDefault();
+
+    console.log('ejecutando ...');
+    
+    if(txtMessage.val().trim().length > 0){
+        console.log(txtMessage.val());
+
+        socket.emit('sendMessageToServer', { message: txtMessage.val() }, function(message) {            
+            if(message){
+                console.log('respuesta server: ', message);
+                RenderMessages(message, true);
+                scrollBottom();
+                txtMessage.val('').focus();
+
+            }
+        });
+    }
+});
