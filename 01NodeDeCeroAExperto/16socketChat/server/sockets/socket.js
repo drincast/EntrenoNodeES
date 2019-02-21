@@ -9,7 +9,7 @@ io.on('connection', (client) => {
         if( !data.name || !data.room){
             return callback({
                 error: true,
-                message: 'El nombre es y la sala son requeridos'
+                message: 'El nombre y la sala son requeridos'
             });
         }
 

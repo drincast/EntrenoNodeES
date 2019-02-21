@@ -35,6 +35,7 @@ socket.on('connect', function() {
 
     socket.emit('enterTheChat', user, function(resp){
         console.log('usuarios conectados', resp);
+        renderUsers(resp);
     });
 });
 
@@ -51,6 +52,7 @@ socket.on('createMessageServer', function(message) {
 // Escuchar información
 socket.on('listPeople', function(data) {
     console.log('personas conectadas', data);
+    renderUsers(data);
 });
 
 //mensaje privado
@@ -61,11 +63,14 @@ socket.on('privateMessage', function(data) {
 
 //Acciones de emisión socket.io
 // Enviar información
-socket.emit('sendMessageToServer', {
-    message: 'test message'
-}, function(resp) {
-    console.log('respuesta server: ', resp);
-});
+function SendMessageToServer(){
+    socket.emit('sendMessageToServer', {
+        message: 'test message'
+    }, function(resp) {
+        console.log('respuesta server: ', resp);
+    });
+}
+
 
 function SendPrivateMessage(idPerson, messsage){
     if(idPerson !== undefined && idPerson !== null)
