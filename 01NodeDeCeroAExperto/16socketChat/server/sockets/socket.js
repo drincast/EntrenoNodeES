@@ -6,37 +6,46 @@ const user = new User();
 
 io.on('connection', (client) => {   
     client.on('enterTheChat', (data, callback) => {
-        if( !data.name ){
+        if( !data.name || !data.room){
             return callback({
                 error: true,
-                message: 'El nombre es necesario'
+                message: 'El nombre es y la sala son requeridos'
             });
         }
 
-        let people = user.AddPerson(client.id, data.name);
+        client.join(data.room);
+
+        let people = user.AddPerson(client.id, data.name, data.room);
 
         //a todos menos al mismo
-        client.broadcast.emit('createMessageServer', {user: 'Admin', message: `${data.name} entro al chat`});
-        client.broadcast.emit('listPeople', user.GetPeople());
+        client.broadcast.to(data.room).emit('createMessageServer', {user: 'Admin', message: `${data.name} entro al chat`});
+        client.broadcast.to(data.room).emit('listPeople', user.GetPeopleByRoom(data.room));
 
-        callback(people);
+        //callback(people);
+        callback(user.GetPeopleByRoom(data.room));
         console.log(people);
     });
 
     client.on('disconnect', () => {
         let removePerson = user.RemovePerson(client.id);
         console.log('se desconecta', removePerson);
-        client.broadcast.emit('createMessageServer', {user: 'Admin', message: `${removePerson.name} abandono el chat`});
+        
+        // client.broadcast.to(removePerson.room).emit('createMessageServer', {user: 'Admin', message: `${removePerson.name} abandono el chat`});
 
-        client.broadcast.emit('createMessageServer', createMessage('Admin', `${removePerson.name} abandono el chat`));
+        client.broadcast.to(removePerson.room).emit('createMessageServer', createMessage('Admin', `${removePerson.name} abandono el chat`));
 
-        client.broadcast.emit('listPeople', user.GetPeople());
+        client.broadcast.to(removePerson.room).emit('listPeople', user.GetPeopleByRoom(removePerson.room));
     });
 
     client.on('sendMessageToServer', (data) => {
         let person = user.GetPerson(client.id);
         let message = createMessage( person.name, data.message);
-        client.broadcast.emit('createMessageServer', message);
+        client.broadcast.to(person.room).emit('createMessageServer', message);
+    });
+
+    client.on('privateMessage', data => {
+        let person = user.GetPerson(client.id);
+        client.broadcast.to(data.forPerson).emit('privateMessage', createMessage(person.name, data.message));
     })
 });
 

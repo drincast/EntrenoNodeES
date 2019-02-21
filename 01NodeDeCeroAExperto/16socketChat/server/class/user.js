@@ -3,10 +3,11 @@ class User {
         this.people = [];
     }
 
-    AddPerson(id, name){
+    AddPerson(id, name, room){
         let person = {
             id,
-            name
+            name,
+            room
         }
 
         this.people.push(person);
@@ -25,7 +26,8 @@ class User {
     }
 
     GetPeopleByRoom(room){
-
+        let people = this.people.filter( p => p.room === room);
+        return people;
     }
 
     RemovePerson(id){
