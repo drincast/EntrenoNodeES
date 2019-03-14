@@ -1,12 +1,27 @@
 import { Router, Request, Response } from 'express';
+import DB from '../sqlite';
 
 const router = Router();
 
 router.get('/heroes', (req: Request, res: Response) => {
-    res.json({
-        ok: true,
-        message: 'Todo ok'
-    });
+    const query = 'SELECT * FROM tblHeroes';
+    DB.ExecuteQuery(query, (err: Error, resp: any) => {
+        if(err){
+            console.log(err);
+
+            res.status(400).json({
+                ok: false,
+                error: err
+            });
+        }
+
+        console.log(resp);
+        res.json({
+            ok: true,
+            message: 'Todo ok ++',
+            heroes: resp
+        });
+    });    
 });
 
 router.get('/heroes/:id', (req: Request, res: Response) => {
@@ -14,7 +29,7 @@ router.get('/heroes/:id', (req: Request, res: Response) => {
 
     res.json({
         ok: true,
-        message: 'Todo ok',
+        message: 'xx',
         id
     });
 });

@@ -11,5 +11,7 @@ server.app.use(router_1.default);
 server.start(function () {
     console.log('server run in port 3000');
     console.log('codigo de typescript');
-    var db = new sqlite_1.default('heroes');
+    //let db: DB = new DB('heroes'); 
+    var db = sqlite_1.default.Instance;
+    db.GetHeroes();
 });

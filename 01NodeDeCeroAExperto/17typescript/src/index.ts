@@ -10,6 +10,9 @@ server.start(() => {
     console.log('server run in port 3000')
     console.log('codigo de typescript');
 
-    let db: DB = new DB('heroes'); 
+    //let db: DB = new DB('heroes'); 
+    let db: DB = DB.Instance;
+    
+    db.GetHeroes();
 })
 

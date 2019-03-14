@@ -45,11 +45,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var sqlite = __importStar(require("sqlite3"));
 var sqlite3 = sqlite.verbose();
 var DB = /** @class */ (function () {
-    function DB(dbName) {
-        this.dbName = dbName;
+    function DB() {
+        console.log('Clase DB inicializada');
+        this.dbName = 'heroes'; //crear nombre de conexión en un archivo de configuración json
         this.LoadOfDB();
         //console.log(this.db);
     }
+    Object.defineProperty(DB, "Instance", {
+        get: function () {
+            if (this._instance === undefined || this._instance === null) {
+                this._instance = new this();
+            }
+            return this._instance;
+        },
+        enumerable: true,
+        configurable: true
+    });
     // PRIVATE METHODS
     DB.prototype.LoadOfDB = function () {
         var _this = this;
@@ -88,16 +99,9 @@ var DB = /** @class */ (function () {
                 this.db.get(script, function (err, row) {
                     if (err === null) {
                         if (undefined === row) {
-                            // script = `INSERT INTO tblHeroes(name, nickname, power) VALUES(?,?,?)`;                    
-                            // this.db.run(script, ['xxx', 'walk man', 'no hace musica'], (err: Error) => {
-                            //     if(err)
-                            //         console.log('error', err);
-                            //     else
-                            //         console.log('database is on-line');
-                            // });
                             _this.InsertHeroe('xxx', 'helada girl', 'hielo en las pestañas');
                             _this.InsertHeroe('???', 'mr burguer', 'no puede si no con media hamburguesa');
-                            _this.InsertHeroe('???', 'chispas', 'no se puede peinar');
+                            _this.InsertHeroe('---', 'chispas', 'no se puede peinar');
                         }
                     }
                     else {
@@ -108,18 +112,26 @@ var DB = /** @class */ (function () {
             });
         });
     };
+    DB.VerifyInitInstance = function () {
+        if (!this._instance) {
+            throw 'debe inicializar la instancia de la basde de datos';
+        }
+    };
     DB.prototype.InsertHeroe = function (name, nickname, power) {
         return __awaiter(this, void 0, void 0, function () {
             var script;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        DB.VerifyInitInstance();
                         script = "INSERT INTO tblHeroes(name, nickname, power) VALUES(?,?,?)";
                         return [4 /*yield*/, this.db.run(script, [name, nickname, power], function (err) {
                                 if (err)
                                     console.log('error', err);
                                 else
                                     console.log('datos insertados');
+                                _this.db.close();
                             })];
                     case 1:
                         _a.sent();
@@ -127,6 +139,63 @@ var DB = /** @class */ (function () {
                 }
             });
         });
+    };
+    DB.prototype.GetHeroes = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var script;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        script = "SELECT * FROM tblHeroes";
+                        return [4 /*yield*/, this.db.all(script, function (err, rows) {
+                                if (err === null) {
+                                    console.log('datos: ', rows);
+                                }
+                                else {
+                                    console.log('error', err);
+                                }
+                                _this.db.close();
+                            })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DB.ExecuteQuery = function (query, callback) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.OpenConnection()];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, this._instance.db.all(query, function (err, res) {
+                                console.log('##', res);
+                                _this._instance.db.close();
+                                return callback(err, res);
+                            })];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DB.OpenConnection = function () {
+        try {
+            this._instance.db = new sqlite3.Database(this._instance.dbName, function (err) {
+                if (err) {
+                    console.log("error en la base de datos: " + err);
+                }
+                console.log('se conecto a la db');
+            });
+        }
+        catch (error) {
+            console.log(error);
+        }
     };
     return DB;
 }());

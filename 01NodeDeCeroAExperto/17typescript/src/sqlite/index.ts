@@ -2,13 +2,25 @@ import * as sqlite from 'sqlite3';
 const sqlite3 = sqlite.verbose();
 
 export default class DB {
+    private static _instance: DB;
+
     db: sqlite.Database;
     dbName: string;
 
-    constructor(dbName: string){
-        this.dbName = dbName;
+    constructor(){
+        console.log('Clase DB inicializada');
+
+        this.dbName = 'heroes';  //crear nombre de conexión en un archivo de configuración json
         this.LoadOfDB();
         //console.log(this.db);
+    }
+
+    public static get Instance(){
+        if(this._instance === undefined || this._instance === null){
+            this._instance = new this();
+        }
+
+        return this._instance;        
     }
 
     // PRIVATE METHODS
@@ -52,7 +64,7 @@ export default class DB {
                 if(undefined === row){
                     this.InsertHeroe('xxx', 'helada girl', 'hielo en las pestañas');
                     this.InsertHeroe('???', 'mr burguer', 'no puede si no con media hamburguesa');
-                    this.InsertHeroe('???', 'chispas', 'no se puede peinar');
+                    this.InsertHeroe('---', 'chispas', 'no se puede peinar');
                 }
             }
             else{
@@ -69,14 +81,60 @@ export default class DB {
         // stmt.finalize(() => {console.log('se insertaron datos')});
     }
 
-    private async InsertHeroe(name: string, nickname: string, power: string) {
+    private static VerifyInitInstance(){
+        if(!this._instance){
+            throw 'debe inicializar la instancia de la basde de datos';
+        }
+    }
+
+    public async InsertHeroe(name: string, nickname: string, power: string) {
+        DB.VerifyInitInstance();
+
         let script = `INSERT INTO tblHeroes(name, nickname, power) VALUES(?,?,?)`;                    
         await this.db.run(script, [name, nickname, power], (err: Error) => {
             if (err)
                 console.log('error', err);
             else
                 console.log('datos insertados');
+
+                this.db.close();
         });
+    }
+
+    public async GetHeroes(){
+        let script = `SELECT * FROM tblHeroes`;
+        await this.db.all(script, (err: Error, rows?: any) => {
+            if(err === null){
+                console.log('datos: ', rows);
+            }
+            else{
+                console.log('error', err);
+            }
+
+            this.db.close();
+        });
+    }
+
+    public static async ExecuteQuery(query: string, callback: Function){
+        await this.OpenConnection();
+        await this._instance.db.all(query, (err: Error, res?: any) => { 
+            console.log('##', res);
+            this._instance.db.close();
+            return callback(err, res)
+        });
+    }
+
+    public static OpenConnection(){
+        try {
+            this._instance.db = new sqlite3.Database(this._instance.dbName, (err) => {     
+                if(err){
+                    console.log("error en la base de datos: " + err);
+                }            
+                console.log('se conecto a la db');
+            });
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
 
